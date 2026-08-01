@@ -197,8 +197,8 @@ fun StageDesktop(
             vertical = floatingWindows,
             modifier = if (floatingWindows) {
                 Modifier
-                    .align(Alignment.CenterStart)
-                    .padding(start = 9.dp)
+                    .align(Alignment.TopStart)
+                    .padding(start = 9.dp, top = dimensions.topStripHeight + 8.dp)
             } else {
                 Modifier
                     .align(Alignment.BottomCenter)
