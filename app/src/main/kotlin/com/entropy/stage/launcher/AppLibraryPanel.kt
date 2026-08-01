@@ -61,8 +61,8 @@ import com.entropy.stage.shell.filterInstalledApps
 fun AppLibraryPanel(
     state: StageShellUiState,
     actions: StageShellActions,
-    compactLayout: Boolean = false,
     modifier: Modifier = Modifier,
+    compactLayout: Boolean = false,
 ) {
     val filtered = remember(state.apps, state.searchQuery) {
         filterInstalledApps(state.apps, state.searchQuery)
