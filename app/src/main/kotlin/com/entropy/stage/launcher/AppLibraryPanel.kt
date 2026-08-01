@@ -61,6 +61,7 @@ import com.entropy.stage.shell.filterInstalledApps
 fun AppLibraryPanel(
     state: StageShellUiState,
     actions: StageShellActions,
+    compactLayout: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
     val filtered = remember(state.apps, state.searchQuery) {
@@ -71,7 +72,7 @@ fun AppLibraryPanel(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 12.dp),
+                .padding(horizontal = 18.dp, vertical = if (compactLayout) 8.dp else 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
@@ -100,7 +101,7 @@ fun AppLibraryPanel(
                 .padding(horizontal = 16.dp),
         )
 
-        Spacer(Modifier.height(8.dp))
+        Spacer(Modifier.height(if (compactLayout) 4.dp else 8.dp))
 
         when {
             state.appsLoading && state.apps.isEmpty() -> EmptyLibraryMessage(
@@ -114,11 +115,14 @@ fun AppLibraryPanel(
             )
 
             else -> LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 76.dp),
+                columns = GridCells.Adaptive(minSize = if (compactLayout) 68.dp else 76.dp),
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 10.dp),
+                contentPadding = PaddingValues(
+                    horizontal = 12.dp,
+                    vertical = if (compactLayout) 6.dp else 10.dp,
+                ),
                 horizontalArrangement = Arrangement.spacedBy(4.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(if (compactLayout) 4.dp else 8.dp),
             ) {
                 items(
                     items = filtered,
@@ -131,6 +135,7 @@ fun AppLibraryPanel(
                         onTogglePin = { actions.togglePinned(app) },
                         onAppInfo = { actions.openAppInfo(app) },
                         onUninstall = { actions.requestUninstall(app) },
+                        compact = compactLayout,
                     )
                 }
             }
@@ -147,6 +152,7 @@ private fun AppTile(
     onTogglePin: () -> Unit,
     onAppInfo: () -> Unit,
     onUninstall: () -> Unit,
+    compact: Boolean,
 ) {
     var menuOpen by remember { mutableStateOf(false) }
 
@@ -160,13 +166,13 @@ private fun AppTile(
                     onClick = onOpen,
                     onLongClick = { menuOpen = true },
                 )
-                .padding(horizontal = 4.dp, vertical = 8.dp),
+                .padding(horizontal = 4.dp, vertical = if (compact) 4.dp else 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Box(contentAlignment = Alignment.BottomEnd) {
                 StageAppIcon(
                     app = app,
-                    modifier = Modifier.size(52.dp),
+                    modifier = Modifier.size(if (compact) 42.dp else 52.dp),
                 )
                 if (pinned) {
                     Box(
@@ -178,14 +184,14 @@ private fun AppTile(
                     )
                 }
             }
-            Spacer(Modifier.height(7.dp))
+            Spacer(Modifier.height(if (compact) 4.dp else 7.dp))
             Text(
                 text = app.label,
                 color = StagePalette.TextPrimary,
-                fontSize = 10.5.sp,
-                lineHeight = 13.sp,
+                fontSize = if (compact) 9.5.sp else 10.5.sp,
+                lineHeight = if (compact) 11.sp else 13.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 2,
+                maxLines = if (compact) 1 else 2,
                 overflow = TextOverflow.Ellipsis,
             )
         }

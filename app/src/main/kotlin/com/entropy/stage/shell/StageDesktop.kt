@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -33,6 +34,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -188,9 +190,17 @@ fun StageDesktop(
             actions = actions,
             dimensions = dimensions,
             maxAvailableWidth = maxWidth - 16.dp,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 9.dp),
+            maxAvailableHeight = maxHeight - dimensions.topStripHeight - 18.dp,
+            vertical = floatingWindows,
+            modifier = if (floatingWindows) {
+                Modifier
+                    .align(Alignment.CenterStart)
+                    .padding(start = 9.dp)
+            } else {
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 9.dp)
+            },
         )
 
         if (state.commandCenterOpen) {
@@ -468,12 +478,22 @@ private fun StageDock(
     actions: StageShellActions,
     dimensions: StageDimensions,
     maxAvailableWidth: androidx.compose.ui.unit.Dp,
+    maxAvailableHeight: androidx.compose.ui.unit.Dp,
+    vertical: Boolean,
     modifier: Modifier = Modifier,
 ) {
-    Surface(
-        modifier = modifier
+    val surfaceModifier = if (vertical) {
+        modifier
+            .width(dimensions.dockHeight)
+            .heightIn(max = maxAvailableHeight)
+    } else {
+        modifier
             .widthIn(max = maxAvailableWidth)
             .height(dimensions.dockHeight)
+    }
+
+    Surface(
+        modifier = surfaceModifier
             .shadow(
                 24.dp,
                 RoundedCornerShape(24.dp),
@@ -484,55 +504,84 @@ private fun StageDock(
         color = Color(0xD91B1B22),
         shape = RoundedCornerShape(24.dp),
     ) {
-        Row(
-            modifier = Modifier
-                .horizontalScroll(rememberScrollState())
-                .padding(horizontal = 9.dp, vertical = 7.dp),
-            horizontalArrangement = Arrangement.spacedBy(3.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            StageDockButton(
-                label = "Applications",
-                selected = state.activeSurface == StageSurface.APP_LIBRARY,
-                magnification = state.dockMagnification && !state.reduceMotion,
-                onClick = { actions.openSurface(StageSurface.APP_LIBRARY) },
+        if (vertical) {
+            Column(
+                modifier = Modifier
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 7.dp, vertical = 9.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                StageSymbol(StageSymbolType.APPS, Modifier.fillMaxSize())
+                StageDockItems(state = state, actions = actions, vertical = true)
             }
-            StageDockButton(
-                label = "Command Center",
-                selected = state.commandCenterOpen,
-                magnification = state.dockMagnification && !state.reduceMotion,
-                onClick = { actions.setCommandCenterOpen(!state.commandCenterOpen) },
+        } else {
+            Row(
+                modifier = Modifier
+                    .horizontalScroll(rememberScrollState())
+                    .padding(horizontal = 9.dp, vertical = 7.dp),
+                horizontalArrangement = Arrangement.spacedBy(3.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                StageSymbol(StageSymbolType.SEARCH, Modifier.fillMaxSize())
+                StageDockItems(state = state, actions = actions, vertical = false)
             }
+        }
+    }
+}
+
+@Composable
+private fun StageDockItems(
+    state: StageShellUiState,
+    actions: StageShellActions,
+    vertical: Boolean,
+) {
+    StageDockButton(
+        label = "Applications",
+        selected = state.activeSurface == StageSurface.APP_LIBRARY,
+        magnification = state.dockMagnification && !state.reduceMotion,
+        onClick = { actions.openSurface(StageSurface.APP_LIBRARY) },
+    ) {
+        StageSymbol(StageSymbolType.APPS, Modifier.fillMaxSize())
+    }
+    StageDockButton(
+        label = "Command Center",
+        selected = state.commandCenterOpen,
+        magnification = state.dockMagnification && !state.reduceMotion,
+        onClick = { actions.setCommandCenterOpen(!state.commandCenterOpen) },
+    ) {
+        StageSymbol(StageSymbolType.SEARCH, Modifier.fillMaxSize())
+    }
+    StageDockButton(
+        label = "Settings",
+        selected = state.activeSurface == StageSurface.SETTINGS,
+        magnification = state.dockMagnification && !state.reduceMotion,
+        onClick = { actions.openSurface(StageSurface.SETTINGS) },
+    ) {
+        StageSymbol(StageSymbolType.SETTINGS, Modifier.fillMaxSize())
+    }
+    if (state.pinnedApps.isNotEmpty()) {
+        Box(
+            if (vertical) {
+                Modifier
+                    .padding(vertical = 4.dp)
+                    .width(38.dp)
+                    .height(1.dp)
+                    .background(Color.White.copy(alpha = 0.14f))
+            } else {
+                Modifier
+                    .padding(horizontal = 4.dp)
+                    .width(1.dp)
+                    .height(38.dp)
+                    .background(Color.White.copy(alpha = 0.14f))
+            },
+        )
+        state.pinnedApps.forEach { app ->
             StageDockButton(
-                label = "Settings",
-                selected = state.activeSurface == StageSurface.SETTINGS,
+                label = app.label,
+                selected = false,
                 magnification = state.dockMagnification && !state.reduceMotion,
-                onClick = { actions.openSurface(StageSurface.SETTINGS) },
+                onClick = { actions.launchApp(app) },
             ) {
-                StageSymbol(StageSymbolType.SETTINGS, Modifier.fillMaxSize())
-            }
-            if (state.pinnedApps.isNotEmpty()) {
-                Box(
-                    Modifier
-                        .padding(horizontal = 4.dp)
-                        .width(1.dp)
-                        .height(38.dp)
-                        .background(Color.White.copy(alpha = 0.14f)),
-                )
-                state.pinnedApps.forEach { app ->
-                    StageDockButton(
-                        label = app.label,
-                        selected = false,
-                        magnification = state.dockMagnification && !state.reduceMotion,
-                        onClick = { actions.launchApp(app) },
-                    ) {
-                        StageAppIcon(app, Modifier.fillMaxSize())
-                    }
-                }
+                StageAppIcon(app, Modifier.fillMaxSize())
             }
         }
     }
@@ -569,11 +618,15 @@ private fun StageWindowHost(
             targetScale = 0.96f,
         ),
     ) {
-        Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = if (floating && !maximized) Alignment.TopCenter else Alignment.Center,
+        ) {
             val windowModifier = if (floating && !maximized) {
                 Modifier
                     .width(availableWidth * 0.78f)
-                    .height(availableHeight * 0.76f)
+                    .height(availableHeight - dimensions.topStripHeight - 16.dp)
+                    .offset(y = dimensions.topStripHeight + 8.dp)
                     .offset { IntOffset(dragX.roundToInt(), dragY.roundToInt()) }
             } else {
                 Modifier
@@ -648,6 +701,7 @@ private fun StageWindowHost(
                         StageSurface.APP_LIBRARY -> AppLibraryPanel(
                             state = state,
                             actions = actions,
+                            compactLayout = floating,
                             modifier = Modifier.fillMaxSize(),
                         )
 
