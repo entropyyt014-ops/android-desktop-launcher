@@ -31,5 +31,30 @@ Install one launcher, complete a short adaptive setup, and receive a coherent de
 - [Design system](docs/DESIGN_SYSTEM.md)
 - [Platform truth](docs/PLATFORM_TRUTH.md)
 - [Single-release build plan](docs/V1_BUILD_PLAN.md)
+- [Gate 0 architecture](docs/ARCHITECTURE.md)
+- [Galaxy A30 benchmark checklist](docs/benchmarks/GALAXY_A30.md)
 
-Implementation begins after the planning contract is approved.
+## Current implementation
+
+Gate 0 is active. The repository now contains a modular native Android foundation with:
+
+- Android 11 minimum support and Android 17 target support;
+- an adaptive Liquid Graphite shell in portrait and landscape;
+- measured RAM, display, heap and mouse/keyboard capability reporting;
+- a lean performance budget for 4 GB devices;
+- unit, lint, screenshot, startup and macrobenchmark infrastructure;
+- CI-built, debug-signed APK artifacts.
+
+The internal product codename is **Stage**. It is not a final public brand decision.
+
+## Build
+
+Use JDK 17 and the checked-in Gradle wrapper:
+
+```bash
+./gradlew :app:assembleDebug
+./gradlew :core:device:testDebugUnitTest :core:designsystem:testDebugUnitTest
+./gradlew :app:updateDebugScreenshotTest :app:validateDebugScreenshotTest
+```
+
+The debug APK is written to `app/build/outputs/apk/debug/`.
