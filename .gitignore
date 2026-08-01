@@ -10,3 +10,8 @@ captures/
 *.keystore
 secrets.properties
 **/google-services.json
+.kotlin/
+*.hprof
+benchmarkData/
+**/outputs/managed_device_android_test_additional_output/
+**/outputs/connected_android_test_additional_output/

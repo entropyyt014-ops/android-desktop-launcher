@@ -1,0 +1,60 @@
+name: Android 11 Benchmark
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  galaxy-a30-profile:
+    name: API 30 / 4 GB reference profile
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: sdkmanager "platforms;android-37" "build-tools;36.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.5.1"
+
+      - name: Run startup benchmark smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          profile: pixel_2
+          disable-animations: true
+          emulator-options: >-
+            -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+            -memory 4096 -cores 4
+          script: >-
+            ./gradlew --no-daemon --stacktrace
+            :benchmark:connectedBenchmarkAndroidTest
+            -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.dryRunMode.enable=true
+
+      - name: Upload benchmark output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: api30-benchmark-output
+          path: |
+            benchmark/build/outputs/
+            benchmark/build/reports/
+          if-no-files-found: warn
