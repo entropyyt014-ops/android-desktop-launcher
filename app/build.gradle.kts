@@ -54,9 +54,6 @@ android {
 
     testOptions {
         unitTests.isIncludeAndroidResources = true
-        screenshotTests {
-            imageDifferenceThreshold = 0.0001f
-        }
     }
 
     lint {
