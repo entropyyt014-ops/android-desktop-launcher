@@ -31,16 +31,21 @@ Install one launcher, complete a short adaptive setup, and receive a coherent de
 - [Design system](docs/DESIGN_SYSTEM.md)
 - [Platform truth](docs/PLATFORM_TRUTH.md)
 - [Single-release build plan](docs/V1_BUILD_PLAN.md)
-- [Gate 0 architecture](docs/ARCHITECTURE.md)
+- [Architecture](docs/ARCHITECTURE.md)
 - [Galaxy A30 benchmark checklist](docs/benchmarks/GALAXY_A30.md)
+- [Gate 1 device test checklist](docs/GATE_1_TEST_CHECKLIST.md)
 
 ## Current implementation
 
-Gate 0 is active. The repository now contains a modular native Android foundation with:
+Gate 0 has passed CI and opened on the physical Galaxy A30 reference device. Gate 1 is now replacing the diagnostic scaffold with the first functional launcher slice:
 
 - Android 11 minimum support and Android 17 target support;
-- an adaptive Liquid Graphite shell in portrait and landscape;
-- measured RAM, display, heap and mouse/keyboard capability reporting;
+- a first-run assistant and official Android Home-role request;
+- an adaptive Liquid Graphite desktop, menu bar, Dock and internal window;
+- real installed-app discovery, search, launch, pin, app-information and uninstall handoff;
+- Command Center, Control Center and a functional Settings surface;
+- persisted onboarding, Dock, appearance and last-window state;
+- measured RAM, display, heap and mouse/keyboard data under Settings → Performance;
 - a lean performance budget for 4 GB devices;
 - unit, lint, screenshot, startup and macrobenchmark infrastructure;
 - CI-built, debug-signed APK artifacts.

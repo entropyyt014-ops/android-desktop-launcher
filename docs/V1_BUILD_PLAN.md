@@ -12,6 +12,8 @@ There will be one public product target: `v1.0`. The stages below are internal b
 
 Exit: a signed debug APK opens a blank responsive shell, reports measured device profile and produces benchmark output.
 
+Status: CI passed and the debug APK opened on the physical Galaxy A30. The first install also confirmed that the diagnostic scaffold must not remain the product Home screen; Gate 1 removes it.
+
 ## Gate 1 — Golden-path shell
 
 - Home-role onboarding;
@@ -21,6 +23,8 @@ Exit: a signed debug APK opens a blank responsive shell, reports measured device
 - touch, mouse, keyboard and session-state foundations.
 
 Exit: the launcher can safely become Home, launch apps, survive process death and remain smooth on the reference profile.
+
+Current slice: setup assistant, Home-role request, real desktop/menu bar/Dock, installed-app library, Command Center, Control Center, Settings, persistent Dock pins and portrait/landscape Stage windows. Two-tile management and full process-death device evidence remain Gate 1 work.
 
 ## Gate 2 — Browser vertical slice
 
