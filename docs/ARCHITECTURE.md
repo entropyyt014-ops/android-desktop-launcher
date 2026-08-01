@@ -1,8 +1,8 @@
-# Gate 0 Architecture
+# Stage Architecture
 
 ## Stack decision
 
-The launcher targets Android 17 (API 37) while keeping Android 11 (API 30) as the minimum and reference-device floor. The build uses Android Gradle Plugin 9.3.0, Gradle 9.5.1, JDK 17, Kotlin 2.4.10 and Compose BOM 2026.06.00.
+The launcher targets Android 17 (API 37) while keeping Android 11 (API 30) as the minimum and reference-device floor. The build uses Android Gradle Plugin 9.3.1, Gradle 9.6.1, JDK 17, Kotlin 2.4.10 and Compose BOM 2026.06.01.
 
 This is intentionally a native Android/Compose project. Web technology will be contained inside the future browser surface; it will not power the launcher shell itself.
 
@@ -19,7 +19,7 @@ Authoritative compatibility references:
 
 | Module | Responsibility | May depend on |
 |---|---|---|
-| `:app` | Android entry point, HOME activity and responsive foundation shell | Design system, device profile |
+| `:app` | HOME activity, onboarding, launcher data, persistent shell state and responsive Stage UI | Design system, device profile |
 | `:core:designsystem` | Liquid Graphite tokens, theme and adaptive dimensions | Compose only |
 | `:core:device` | Deterministic display, RAM, heap and input measurement | Android framework only |
 | `:benchmark` | Cold-start and future frame/memory performance tests | Built APK only |
@@ -30,6 +30,10 @@ Features added in later gates should be split by capability rather than by UI sc
 
 - The shell owns one immutable `DeviceProfile` snapshot for the current configuration.
 - Configuration changes produce a new profile; components do not query global display metrics independently.
+- `LauncherApps` is the authoritative installed-app source and supplies package-change callbacks.
+- Preferences DataStore owns onboarding, Dock pins, appearance options and the last open Stage surface.
+- `RoleManager.ROLE_HOME` is always user-granted; protected controls open official Android Settings destinations.
+- Only Stage-owned surfaces render inside Stage windows. Android applications launch through the platform.
 - `PerformanceTier.LEAN` is the Galaxy A30-class default: no continuous blur, two live WebViews and two simultaneous internal windows.
 - All direct-manipulation surfaces retain at least a 48 dp target after font scaling.
 - The app does not start a permanent background service in Gate 0.

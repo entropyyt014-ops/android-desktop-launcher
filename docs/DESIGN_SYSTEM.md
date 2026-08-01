@@ -15,7 +15,7 @@ We borrow patterns, not Apple assets, trademarks or exact component copies.
 - Glass: translucent only where it clarifies layers; cached or opaque substitutes on the 4 GB profile.
 - Texture: extremely subtle grain to avoid sterile vector-flat surfaces.
 - Icons: original or permissively licensed rounded stroke icons with filled active variants.
-- Type: Inter for interface text and JetBrains Mono for terminal/code.
+- Type: compact system sans for interface text; a permissive bundled monospace may be added with the terminal/editor gate.
 
 ## Interaction grammar
 

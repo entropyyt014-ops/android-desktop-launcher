@@ -52,7 +52,7 @@ jobs:
         run: |
           ./gradlew --no-daemon --stacktrace             :core:device:testDebugUnitTest             :core:designsystem:testDebugUnitTest             :app:testDebugUnitTest             :app:lintDebug
 
-      - name: Render and validate foundation screenshots
+      - name: Render and validate Stage shell screenshots
         run: |
           ./gradlew --no-daemon --stacktrace :app:updateDebugScreenshotTest
           ./gradlew --no-daemon --stacktrace :app:validateDebugScreenshotTest
