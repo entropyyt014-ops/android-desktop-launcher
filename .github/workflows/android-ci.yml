@@ -57,6 +57,13 @@ jobs:
           ./gradlew --no-daemon --stacktrace :app:updateDebugScreenshotTest
           ./gradlew --no-daemon --stacktrace :app:validateDebugScreenshotTest
 
+      - name: Upload rendered Stage shell screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: stage-shell-screenshots
+          path: app/src/screenshotTestDebug/reference/*.png
+          if-no-files-found: error
+
       - name: Build signed debug APK
         run: ./gradlew --no-daemon --stacktrace :app:assembleDebug
 
