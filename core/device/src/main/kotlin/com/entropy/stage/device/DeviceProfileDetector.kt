@@ -47,8 +47,11 @@ class DeviceProfileDetector(
     }
 
     private fun detectInput(configuration: Configuration): InputProfile {
-        val devices = InputDevice.getDeviceIds()
-            .mapNotNull { deviceId -> InputDevice.getDevice(deviceId) }
+        val devices: List<InputDevice> = InputDevice.getDeviceIds()
+            .asSequence()
+            .map { deviceId -> InputDevice.getDevice(deviceId) }
+            .filterNotNull()
+            .toList()
 
         return InputProfile(
             hasTouchscreen = configuration.touchscreen != Configuration.TOUCHSCREEN_NOTOUCH,
