@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -42,8 +41,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.drawable.toBitmap
@@ -218,13 +215,13 @@ fun StageSymbol(
                     lineTo(size.width * 0.38f, size.height * 0.32f)
                     lineTo(size.width * 0.48f, size.height * 0.22f)
                     lineTo(size.width * 0.84f, size.height * 0.22f)
-                    quadraticBezierTo(size.width * 0.9f, size.height * 0.22f, size.width * 0.9f, size.height * 0.3f)
+                    quadraticTo(size.width * 0.9f, size.height * 0.22f, size.width * 0.9f, size.height * 0.3f)
                     lineTo(size.width * 0.9f, size.height * 0.74f)
-                    quadraticBezierTo(size.width * 0.9f, size.height * 0.82f, size.width * 0.82f, size.height * 0.82f)
+                    quadraticTo(size.width * 0.9f, size.height * 0.82f, size.width * 0.82f, size.height * 0.82f)
                     lineTo(size.width * 0.16f, size.height * 0.82f)
-                    quadraticBezierTo(size.width * 0.1f, size.height * 0.82f, size.width * 0.1f, size.height * 0.74f)
+                    quadraticTo(size.width * 0.1f, size.height * 0.82f, size.width * 0.1f, size.height * 0.74f)
                     lineTo(size.width * 0.1f, size.height * 0.4f)
-                    quadraticBezierTo(size.width * 0.1f, size.height * 0.32f, size.width * 0.12f, size.height * 0.32f)
+                    quadraticTo(size.width * 0.1f, size.height * 0.32f, size.width * 0.12f, size.height * 0.32f)
                     close()
                 }
                 drawPath(path, tint.copy(alpha = 0.85f))
@@ -404,34 +401,5 @@ fun StageToggle(
                 .clip(CircleShape)
                 .background(Color.White),
         )
-    }
-}
-
-@Composable
-fun StageLabel(
-    title: String,
-    subtitle: String? = null,
-    modifier: Modifier = Modifier,
-) {
-    Box(modifier = modifier) {
-        androidx.compose.foundation.layout.Column {
-            Text(
-                text = title,
-                color = StagePalette.TextPrimary,
-                fontSize = 13.sp,
-                fontWeight = FontWeight.Medium,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    color = StagePalette.TextSecondary,
-                    fontSize = 11.sp,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
     }
 }

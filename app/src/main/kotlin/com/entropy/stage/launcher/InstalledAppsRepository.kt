@@ -5,10 +5,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.LauncherApps
-import android.net.Uri
 import android.os.Process
 import android.os.UserHandle
 import android.provider.Settings
+import androidx.core.net.toUri
 import com.entropy.stage.shell.InstalledApp
 import java.text.Collator
 import kotlinx.coroutines.CoroutineScope
@@ -80,14 +80,14 @@ class InstalledAppsRepository(
         context.startActivity(
             Intent(
                 Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
-                Uri.parse("package:${app.packageName}"),
+                "package:${app.packageName}".toUri(),
             ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
     }
 
     fun requestUninstall(app: InstalledApp): Result<Unit> = runCatching {
         context.startActivity(
-            Intent(Intent.ACTION_DELETE, Uri.parse("package:${app.packageName}"))
+            Intent(Intent.ACTION_DELETE, "package:${app.packageName}".toUri())
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
         )
     }

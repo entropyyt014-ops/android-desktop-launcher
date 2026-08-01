@@ -224,7 +224,6 @@ class StageShellViewModel(
 
     override fun onCleared() {
         installedApps.stop()
-        super.onCleared()
     }
 
     class Factory(
