@@ -159,12 +159,15 @@ fun StageDesktop(
             homeRoleHeld = state.homeRoleHeld,
             onOpenApps = { actions.openSurface(StageSurface.APP_LIBRARY) },
             onRequestHome = onRequestHomeRole,
-            modifier = Modifier
-                .align(Alignment.TopStart)
-                .padding(
-                    start = if (floatingWindows) 22.dp else 14.dp,
-                    top = dimensions.topStripHeight + 20.dp,
-                ),
+            modifier = if (floatingWindows) {
+                Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 22.dp, top = dimensions.topStripHeight + 20.dp)
+            } else {
+                Modifier
+                    .align(Alignment.TopStart)
+                    .padding(start = 14.dp, top = dimensions.topStripHeight + 20.dp)
+            },
         )
 
         StageWindowHost(
