@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import android.net.Uri
 import android.os.BatteryManager
 import android.provider.Settings
 import com.entropy.stage.browser.BROWSER_HOME_URL
@@ -30,6 +29,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import com.entropy.stage.data.StagePreferencesRepository
 import com.entropy.stage.device.DeviceProfile
 import com.entropy.stage.launcher.InstalledAppsRepository
@@ -380,7 +380,7 @@ class StageShellViewModel(
 
     override fun submitBrowserAddress() {
         val input = _uiState.value.browser.addressInput.trim()
-        val scheme = runCatching { Uri.parse(input).scheme?.lowercase(Locale.ROOT) }.getOrNull()
+        val scheme = runCatching { input.toUri().scheme?.lowercase(Locale.ROOT) }.getOrNull()
         if (scheme in EXTERNAL_BROWSER_SCHEMES || scheme == "intent") {
             requestExternalNavigation(input)
         } else {
@@ -403,7 +403,7 @@ class StageShellViewModel(
     override fun setBrowserProfile(profile: BrowserProfile) {
         updateBrowser(persist = true) { browser ->
             val tab = browser.activeTab
-            val host = runCatching { Uri.parse(tab.url).host?.lowercase(Locale.ROOT) }.getOrNull()
+            val host = runCatching { tab.url.toUri().host?.lowercase(Locale.ROOT) }.getOrNull()
             val profiles = if (host.isNullOrBlank()) {
                 browser.siteProfiles
             } else {
@@ -484,7 +484,7 @@ class StageShellViewModel(
         val existing = _uiState.value.browser.tabs.firstOrNull { it.id == tabId } ?: return
         val safeUrl = snapshot.url.ifBlank { existing.url }
         val title = snapshot.title.ifBlank {
-            runCatching { Uri.parse(safeUrl).host }.getOrNull() ?: "New Tab"
+            runCatching { safeUrl.toUri().host }.getOrNull() ?: "New Tab"
         }
         val persistSnapshot = snapshot.finished ||
             (!snapshot.isLoading && snapshot.scrollY != existing.scrollY)
@@ -719,7 +719,7 @@ class StageShellViewModel(
         url: String,
         fallback: BrowserProfile = BrowserProfile.DESKTOP,
     ): BrowserProfile {
-        val host = runCatching { Uri.parse(url).host?.lowercase(Locale.ROOT) }.getOrNull()
+        val host = runCatching { url.toUri().host?.lowercase(Locale.ROOT) }.getOrNull()
         return host?.let(browser.siteProfiles::get) ?: fallback
     }
 

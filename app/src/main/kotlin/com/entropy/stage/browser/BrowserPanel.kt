@@ -1,6 +1,5 @@
 package com.entropy.stage.browser
 
-import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -57,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
 import com.entropy.stage.designsystem.StagePalette
 import java.text.DateFormat
 import java.util.Date
@@ -473,7 +473,7 @@ private fun FocusModePill(
     onExit: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val host = remember(tab.url) { runCatching { Uri.parse(tab.url).host }.getOrNull() ?: tab.url }
+    val host = remember(tab.url) { runCatching { tab.url.toUri().host }.getOrNull() ?: tab.url }
     Row(
         modifier = modifier
             .padding(top = 8.dp)
@@ -967,7 +967,7 @@ private fun ExternalLinkDialog(
     onCancel: () -> Unit,
     onOpen: () -> Unit,
 ) {
-    val scheme = remember(url) { runCatching { Uri.parse(url).scheme }.getOrNull() ?: "external" }
+    val scheme = remember(url) { runCatching { url.toUri().scheme }.getOrNull() ?: "external" }
     Dialog(onDismissRequest = onCancel) {
         Surface(
             modifier = Modifier
@@ -1035,7 +1035,7 @@ private fun panelTitle(panel: BrowserPanel): String = when (panel) {
     BrowserPanel.DOWNLOADS -> "Downloads"
 }
 
-private fun hostLabel(url: String): String = runCatching { Uri.parse(url).host }.getOrNull() ?: "this tab"
+private fun hostLabel(url: String): String = runCatching { url.toUri().host }.getOrNull() ?: "this tab"
 
 private fun formatTime(epochMillis: Long): String =
     DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(epochMillis))

@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
 import androidx.core.content.ContextCompat
+import androidx.core.net.toUri
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -472,7 +473,7 @@ private fun SitePermissionDialog(
 ) {
     val origin = when (prompt) {
         is PendingSitePermission.Media -> prompt.request.origin.host ?: prompt.request.origin.toString()
-        is PendingSitePermission.Location -> Uri.parse(prompt.origin).host ?: prompt.origin
+        is PendingSitePermission.Location -> prompt.origin.toUri().host ?: prompt.origin
     }
     val capability = when (prompt) {
         is PendingSitePermission.Media -> {
