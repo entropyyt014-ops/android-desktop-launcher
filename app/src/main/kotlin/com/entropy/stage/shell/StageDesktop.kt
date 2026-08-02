@@ -41,7 +41,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -603,6 +602,7 @@ private fun StageDockItems(
     StageDockButton(
         label = "Applications",
         selected = state.activeSurface == StageSurface.APP_LIBRARY,
+        running = state.isSurfaceRunning(StageSurface.APP_LIBRARY),
         magnification = state.dockMagnification && !state.reduceMotion,
         onClick = { actions.openSurface(StageSurface.APP_LIBRARY) },
     ) {
@@ -611,6 +611,7 @@ private fun StageDockItems(
     StageDockButton(
         label = "Browse",
         selected = state.activeSurface == StageSurface.BROWSER,
+        running = state.isSurfaceRunning(StageSurface.BROWSER),
         magnification = state.dockMagnification && !state.reduceMotion,
         onClick = { actions.openSurface(StageSurface.BROWSER) },
     ) {
@@ -627,6 +628,7 @@ private fun StageDockItems(
     StageDockButton(
         label = "Settings",
         selected = state.activeSurface == StageSurface.SETTINGS,
+        running = state.isSurfaceRunning(StageSurface.SETTINGS),
         magnification = state.dockMagnification && !state.reduceMotion,
         onClick = { actions.openSurface(StageSurface.SETTINGS) },
     ) {
@@ -673,7 +675,7 @@ private fun StageWindowHost(
 ) {
     val visible = state.activeSurface != StageSurface.NONE
     val transitionDuration = if (state.reduceMotion) 0 else 210
-    var maximized by remember(state.activeSurface, floating) { mutableStateOf(false) }
+    val maximized = floating && state.windowMode == StageWindowMode.MAXIMIZED
     var dragX by remember(state.activeSurface) { mutableFloatStateOf(0f) }
     var dragY by remember(state.activeSurface) { mutableFloatStateOf(0f) }
     val density = LocalDensity.current
@@ -696,18 +698,27 @@ private fun StageWindowHost(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = if (floating && !maximized) Alignment.TopCenter else Alignment.Center,
         ) {
-            val windowModifier = if (floating && !maximized) {
-                Modifier
+            val windowModifier = when {
+                floating && !maximized -> Modifier
                     .width(availableWidth * 0.78f)
                     .height(availableHeight - dimensions.topStripHeight - 16.dp)
                     .offset(y = dimensions.topStripHeight + 8.dp)
                     .offset { IntOffset(dragX.roundToInt(), dragY.roundToInt()) }
-            } else {
-                Modifier
+
+                floating -> Modifier
                     .fillMaxSize()
                     .padding(
-                        start = if (floating) 8.dp else 7.dp,
-                        end = if (floating) 8.dp else 7.dp,
+                        start = dimensions.dockHeight + 18.dp,
+                        end = 8.dp,
+                        top = dimensions.topStripHeight + 8.dp,
+                        bottom = 8.dp,
+                    )
+
+                else -> Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 7.dp,
+                        end = 7.dp,
                         top = dimensions.topStripHeight + 8.dp,
                         bottom = dimensions.dockHeight + 18.dp,
                     )
@@ -733,7 +744,7 @@ private fun StageWindowHost(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.dp)
+                            .height(44.dp)
                             .background(Color.White.copy(alpha = 0.025f))
                             .then(
                                 if (floating && !maximized) {
@@ -751,8 +762,10 @@ private fun StageWindowHost(
                     ) {
                         WindowTrafficLights(
                             onClose = actions::closeSurface,
-                            onMinimize = actions::closeSurface,
-                            onMaximize = { if (floating) maximized = !maximized },
+                            onMinimize = actions::minimizeSurface,
+                            onMaximize = actions::toggleMaximizeSurface,
+                            maximized = maximized,
+                            canMaximize = floating,
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
                                 .padding(start = 14.dp),

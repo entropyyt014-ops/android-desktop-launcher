@@ -159,6 +159,7 @@ fun StageBrowserPanel(
                     BrowserErrorCard(
                         message = error,
                         onReload = { actions.requestBrowserCommand(BrowserCommandType.RELOAD) },
+                        onOpenExternally = actions::openActiveBrowserPageExternally,
                         modifier = Modifier.align(Alignment.Center),
                     )
                 }
@@ -583,6 +584,9 @@ private fun BrowserMenu(state: BrowserUiState, actions: BrowserActions) {
             PanelAction("Find in page", "Ctrl/Meta + F") { actions.setBrowserFindVisible(true) }
             PanelAction("Focus mode", "Collapse browser chrome") { actions.setBrowserFocusMode(true) }
             PanelAction("Share page", state.activeTab.title) { actions.shareActiveBrowserPage() }
+            PanelAction("Open in Android browser", hostLabel(state.activeTab.url)) {
+                actions.openActiveBrowserPageExternally()
+            }
             PanelDivider()
             PanelAction("Bookmarks", "${state.bookmarks.size} saved") {
                 actions.setBrowserPanel(BrowserPanel.BOOKMARKS)
@@ -889,6 +893,7 @@ private fun EmptyPanel(title: String, subtitle: String) {
 private fun BrowserErrorCard(
     message: String,
     onReload: () -> Unit,
+    onOpenExternally: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -904,16 +909,10 @@ private fun BrowserErrorCard(
             Spacer(Modifier.height(6.dp))
             Text(message, color = StagePalette.TextSecondary, fontSize = 10.5.sp, lineHeight = 15.sp)
             Spacer(Modifier.height(12.dp))
-            Text(
-                "Try again",
-                modifier = Modifier
-                    .clip(RoundedCornerShape(9.dp))
-                    .background(StagePalette.Violet.copy(alpha = 0.22f))
-                    .clickable(onClick = onReload)
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                color = StagePalette.VioletBright,
-                fontSize = 10.5.sp,
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                DialogButton("Open externally", onOpenExternally)
+                DialogButton("Try again", onReload, highlighted = true)
+            }
         }
     }
 }

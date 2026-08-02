@@ -184,6 +184,7 @@ interface BrowserActions {
     fun openBrowserDownload(id: Long)
     fun shareBrowserDownload(id: Long)
     fun shareActiveBrowserPage()
+    fun openActiveBrowserPageExternally()
 }
 
 fun normalizeBrowserInput(rawInput: String): String {

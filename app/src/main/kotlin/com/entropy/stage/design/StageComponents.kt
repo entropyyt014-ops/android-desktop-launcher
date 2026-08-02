@@ -308,6 +308,7 @@ fun StageAppIcon(
 fun StageDockButton(
     label: String,
     selected: Boolean,
+    running: Boolean = selected,
     magnification: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -362,7 +363,7 @@ fun StageDockButton(
         ) {
             content()
         }
-        if (selected) {
+        if (running) {
             Box(
                 Modifier
                     .align(Alignment.BottomCenter)
@@ -379,14 +380,19 @@ fun WindowTrafficLights(
     onClose: () -> Unit,
     onMinimize: () -> Unit,
     onMaximize: () -> Unit,
+    maximized: Boolean = false,
+    canMaximize: Boolean = true,
     modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         TrafficLight(StagePalette.Danger, "Close", onClose)
-        Spacer(Modifier.width(8.dp))
         TrafficLight(StagePalette.Warning, "Minimize", onMinimize)
-        Spacer(Modifier.width(8.dp))
-        TrafficLight(StagePalette.Success, "Maximize", onMaximize)
+        TrafficLight(
+            color = StagePalette.Success,
+            label = if (maximized) "Restore" else "Maximize",
+            onClick = onMaximize,
+            enabled = canMaximize,
+        )
     }
 }
 
@@ -395,15 +401,22 @@ private fun TrafficLight(
     color: Color,
     label: String,
     onClick: () -> Unit,
+    enabled: Boolean = true,
 ) {
     Box(
         modifier = Modifier
-            .size(13.dp)
-            .clip(CircleShape)
-            .background(color)
+            .size(44.dp)
             .semantics { contentDescription = label }
-            .clickable(role = Role.Button, onClick = onClick),
-    )
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier
+                .size(13.dp)
+                .clip(CircleShape)
+                .background(color.copy(alpha = if (enabled) 1f else 0.36f)),
+        )
+    }
 }
 
 @Composable

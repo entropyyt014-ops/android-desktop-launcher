@@ -132,16 +132,21 @@ class StageShellViewModel(
     }
 
     override fun openSurface(surface: StageSurface) {
-        _uiState.value = _uiState.value.copy(
-            activeSurface = surface,
-            commandCenterOpen = false,
-            controlCenterOpen = false,
-        )
+        _uiState.value = _uiState.value.withOpenedSurface(surface)
         viewModelScope.launch { preferences.setLastSurface(surface) }
     }
 
     override fun closeSurface() {
-        openSurface(StageSurface.NONE)
+        _uiState.value = _uiState.value.withClosedSurface()
+        viewModelScope.launch { preferences.setLastSurface(StageSurface.NONE) }
+    }
+
+    override fun minimizeSurface() {
+        _uiState.value = _uiState.value.withMinimizedSurface()
+    }
+
+    override fun toggleMaximizeSurface() {
+        _uiState.value = _uiState.value.withToggledMaximize()
     }
 
     override fun setCommandCenterOpen(open: Boolean) {
@@ -498,7 +503,9 @@ class StageShellViewModel(
                 canGoBack = snapshot.canGoBack,
                 canGoForward = snapshot.canGoForward,
                 scrollY = snapshot.scrollY,
-                lastError = if (snapshot.isLoading && snapshot.progress <= 10) {
+                lastError = if (snapshot.isLoading &&
+                    (safeUrl != current.url || snapshot.progress <= 10)
+                ) {
                     null
                 } else {
                     current.lastError
@@ -634,6 +641,13 @@ class StageShellViewModel(
         val tab = _uiState.value.browser.activeTab
         browserPlatform.sharePage(tab.title, tab.url).onFailure { failure ->
             showError("Page could not be shared", failure)
+        }
+    }
+
+    override fun openActiveBrowserPageExternally() {
+        val tab = _uiState.value.browser.activeTab
+        browserPlatform.openWebPage(tab.url).onFailure { failure ->
+            showError("Android could not open this page", failure)
         }
     }
 

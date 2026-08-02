@@ -9,6 +9,16 @@ Reference device: Samsung Galaxy A30, Android 11, 4 GB RAM.
 - Enter a phrase without a domain and verify it becomes a Google search.
 - Open two tabs, switch between them and confirm both retain their pages.
 - Open a third tab and confirm Stage remains responsive under the two-WebView budget.
+- From a Google result, open a link that requests a new window and confirm it becomes a usable Stage tab instead of silently doing nothing.
+- Open `https://chatgpt.com/` directly and from Google. If embedded sign-in is rejected, verify **Browser menu → Open in Android browser** works.
+
+## Window controls
+
+- Tap amber: the window must disappear, its Dock running dot must remain, and tapping that Dock icon must restore the same surface.
+- Tap green in landscape: the window must fill the workspace beside the left Dock and below the menu bar, with no large empty strip below it.
+- Tap green again: the window must return to its prior floating size and drag position.
+- Tap red: the window must close and its Dock running dot must disappear.
+- Repeat amber/green/red for Browse, Applications and Settings.
 
 ## Profiles and sessions
 

@@ -17,6 +17,7 @@ import com.entropy.stage.shell.StageDesktop
 import com.entropy.stage.shell.StageShellActions
 import com.entropy.stage.shell.StageShellUiState
 import com.entropy.stage.shell.StageSurface
+import com.entropy.stage.shell.StageWindowMode
 import com.entropy.stage.shell.SystemDestination
 import com.entropy.stage.shell.SystemStatus
 
@@ -84,6 +85,29 @@ fun stageBrowserLandscapeScreenshot() {
 
 @PreviewTest
 @Preview(
+    name = "Maximized landscape Stage Browser",
+    widthDp = 740,
+    heightDp = 360,
+    showBackground = true,
+)
+@Composable
+fun stageBrowserMaximizedLandscapeScreenshot() {
+    StageTheme {
+        StageDesktop(
+            state = previewState(
+                widthDp = 740,
+                heightDp = 360,
+                surface = StageSurface.BROWSER,
+                windowMode = StageWindowMode.MAXIMIZED,
+            ),
+            actions = PreviewActions,
+            onRequestHomeRole = {},
+        )
+    }
+}
+
+@PreviewTest
+@Preview(
     name = "First run setup assistant",
     widthDp = 360,
     heightDp = 740,
@@ -107,6 +131,7 @@ private fun previewState(
     widthDp: Int = 360,
     heightDp: Int = 740,
     surface: StageSurface = StageSurface.NONE,
+    windowMode: StageWindowMode = StageWindowMode.FLOATING,
 ): StageShellUiState {
     val apps = listOf(
         previewApp("Chrome", "com.android.chrome", "Main", "chrome"),
@@ -133,6 +158,7 @@ private fun previewState(
         appsLoading = false,
         pinnedAppIds = linkedSetOf("chrome", "termux"),
         activeSurface = surface,
+        windowMode = windowMode,
         browser = BrowserUiState.preview(),
         systemStatus = SystemStatus(
             clockLabel = "Sat 1 Aug  20:30",
@@ -158,6 +184,8 @@ private object PreviewActions : StageShellActions {
     override fun completeOnboarding() = Unit
     override fun openSurface(surface: StageSurface) = Unit
     override fun closeSurface() = Unit
+    override fun minimizeSurface() = Unit
+    override fun toggleMaximizeSurface() = Unit
     override fun setCommandCenterOpen(open: Boolean) = Unit
     override fun setControlCenterOpen(open: Boolean) = Unit
     override fun setSearchQuery(query: String) = Unit
@@ -201,4 +229,5 @@ private object PreviewActions : StageShellActions {
     override fun openBrowserDownload(id: Long) = Unit
     override fun shareBrowserDownload(id: Long) = Unit
     override fun shareActiveBrowserPage() = Unit
+    override fun openActiveBrowserPageExternally() = Unit
 }

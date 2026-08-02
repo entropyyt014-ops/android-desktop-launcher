@@ -98,6 +98,19 @@ class BrowserPlatformController(
         )
     }
 
+    fun openWebPage(url: String): Result<Unit> = runCatching {
+        val uri = url.toUri()
+        require(uri.scheme.equals("https", ignoreCase = true) ||
+            uri.scheme.equals("http", ignoreCase = true)) {
+            "Only web links can open in an Android browser"
+        }
+        application.startActivity(
+            Intent(Intent.ACTION_VIEW, uri)
+                .addCategory(Intent.CATEGORY_BROWSABLE)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+        )
+    }
+
     fun openExternal(url: String): Result<Unit> = runCatching {
         val uri = url.toUri()
         val intent = if (uri.scheme.equals("intent", ignoreCase = true)) {

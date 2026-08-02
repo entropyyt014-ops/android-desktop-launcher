@@ -49,6 +49,15 @@ internal class BrowserWebViewPool(
         configureBrowserWebView(webView, profile, defaultUserAgent)
     }
 
+    fun createTransient(tab: BrowserTab): WebView {
+        views.keys.filterNot { it == tab.id }.toList().forEach(::discard)
+        return WebView(viewContext).apply {
+            setBackgroundColor(Color.TRANSPARENT)
+            visibility = View.INVISIBLE
+            configureBrowserWebView(this, tab.profile, defaultUserAgent)
+        }
+    }
+
     fun retainTabs(tabIds: Set<String>) {
         views.keys.filterNot(tabIds::contains).forEach { tabId -> discard(tabId) }
     }

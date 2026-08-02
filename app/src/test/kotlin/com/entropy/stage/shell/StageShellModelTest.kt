@@ -33,6 +33,45 @@ class StageShellModelTest {
         assertEquals(listOf("termux", "chrome"), state.pinnedApps.map { it.id })
     }
 
+    @Test
+    fun minimizeRestoreAndCloseKeepWindowStatesDistinct() {
+        val opened = StageShellUiState(
+            deviceProfile = DeviceProfile.preview(),
+            activeSurface = StageSurface.BROWSER,
+            windowMode = StageWindowMode.MAXIMIZED,
+        )
+
+        val minimized = opened.withMinimizedSurface()
+        assertEquals(StageSurface.NONE, minimized.activeSurface)
+        assertEquals(StageSurface.BROWSER, minimized.minimizedSurface)
+        assertEquals(StageWindowMode.MAXIMIZED, minimized.windowMode)
+        assertEquals(true, minimized.isSurfaceRunning(StageSurface.BROWSER))
+
+        val restored = minimized.withOpenedSurface(StageSurface.BROWSER)
+        assertEquals(StageSurface.BROWSER, restored.activeSurface)
+        assertEquals(StageSurface.NONE, restored.minimizedSurface)
+        assertEquals(StageWindowMode.MAXIMIZED, restored.windowMode)
+
+        val closed = restored.withClosedSurface()
+        assertEquals(StageSurface.NONE, closed.activeSurface)
+        assertEquals(StageSurface.NONE, closed.minimizedSurface)
+        assertEquals(StageWindowMode.FLOATING, closed.windowMode)
+    }
+
+    @Test
+    fun openingAnotherSurfaceStartsItFloating() {
+        val browser = StageShellUiState(
+            deviceProfile = DeviceProfile.preview(),
+            activeSurface = StageSurface.BROWSER,
+            windowMode = StageWindowMode.MAXIMIZED,
+        )
+
+        val settings = browser.withOpenedSurface(StageSurface.SETTINGS)
+
+        assertEquals(StageSurface.SETTINGS, settings.activeSurface)
+        assertEquals(StageWindowMode.FLOATING, settings.windowMode)
+    }
+
     private fun app(label: String, packageName: String, id: String): InstalledApp =
         InstalledApp(
             id = id,

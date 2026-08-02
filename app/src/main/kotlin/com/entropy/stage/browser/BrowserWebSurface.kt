@@ -1,11 +1,14 @@
 package com.entropy.stage.browser
 
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.net.http.SslError
 import android.os.Message
+import android.view.ViewGroup
+import android.webkit.CookieManager
 import android.webkit.GeolocationPermissions
 import android.webkit.PermissionRequest
 import android.webkit.RenderProcessGoneDetail
@@ -14,8 +17,10 @@ import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.FrameLayout
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -58,6 +63,51 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.entropy.stage.designsystem.StagePalette
 import java.util.concurrent.atomic.AtomicBoolean
+
+private class BrowserWebViewHost(context: Context) : FrameLayout(context) {
+    var primaryWebView: WebView? = null
+        private set
+
+    private val popupViews = mutableSetOf<WebView>()
+
+    fun attachPrimary(webView: WebView) {
+        if (primaryWebView === webView && webView.parent === this) return
+        primaryWebView?.let(::removeView)
+        (webView.parent as? ViewGroup)?.removeView(webView)
+        addView(
+            webView,
+            FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        primaryWebView = webView
+    }
+
+    fun detachPrimary(): WebView? = primaryWebView?.also { webView ->
+        if (webView.parent === this) removeView(webView)
+        primaryWebView = null
+    }
+
+    fun attachPopup(webView: WebView) {
+        (webView.parent as? ViewGroup)?.removeView(webView)
+        popupViews += webView
+        addView(webView, FrameLayout.LayoutParams(1, 1))
+    }
+
+    fun releasePopup(webView: WebView) {
+        popupViews -= webView
+        if (webView.parent === this) removeView(webView)
+        webView.stopLoading()
+        webView.webChromeClient = null
+        webView.webViewClient = WebViewClient()
+        webView.destroy()
+    }
+
+    fun releaseAllPopups() {
+        popupViews.toList().forEach(::releasePopup)
+    }
+}
 
 @Composable
 internal fun BrowserWebSurface(
@@ -119,12 +169,15 @@ internal fun BrowserWebSurface(
     key(tab.id, tab.renderGeneration) {
         AndroidView(
             factory = {
-                pool.obtain(tab).also { webView ->
+                BrowserWebViewHost(it).also { host ->
+                    val webView = pool.obtain(tab)
+                    host.attachPrimary(webView)
                     bindBrowserClients(
                         webView = webView,
                         tab = tab,
                         actions = actions,
                         pool = pool,
+                        popupHost = host,
                         onFileChooser = { callback, params ->
                             fileCallback?.onReceiveValue(null)
                             fileCallback = callback
@@ -149,13 +202,15 @@ internal fun BrowserWebSurface(
                     if (webView.url.isNullOrBlank()) webView.loadUrl(tab.url)
                 }
             },
-            update = { webView ->
+            update = { host ->
+                val webView = host.primaryWebView ?: pool.obtain(tab).also(host::attachPrimary)
                 pool.applyProfile(webView, tab.profile)
                 bindBrowserClients(
                     webView = webView,
                     tab = tab,
                     actions = actions,
                     pool = pool,
+                    popupHost = host,
                     onFileChooser = { callback, params ->
                         fileCallback?.onReceiveValue(null)
                         fileCallback = callback
@@ -178,10 +233,14 @@ internal fun BrowserWebSurface(
                 activeWebView = webView
                 pool.setActive(tab.id)
             },
-            onRelease = { webView ->
-                actions.reportBrowserPage(tab.id, webView.snapshot(finished = false))
-                webView.onPause()
-                if (activeWebView === webView) activeWebView = null
+            onRelease = { host ->
+                val webView = host.detachPrimary()
+                host.releaseAllPopups()
+                if (webView != null) {
+                    actions.reportBrowserPage(tab.id, webView.snapshot(finished = false))
+                    webView.onPause()
+                    if (activeWebView === webView) activeWebView = null
+                }
             },
             modifier = modifier.fillMaxSize(),
         )
@@ -219,7 +278,10 @@ internal fun BrowserWebSurface(
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
                 Lifecycle.Event.ON_RESUME -> pool.resumeAll()
-                Lifecycle.Event.ON_PAUSE -> pool.pauseAll()
+                Lifecycle.Event.ON_PAUSE -> {
+                    pool.pauseAll()
+                    CookieManager.getInstance().flush()
+                }
                 else -> Unit
             }
         }
@@ -230,6 +292,7 @@ internal fun BrowserWebSurface(
             fileCallback = null
             pendingPermission?.deny()
             pendingPermission = null
+            CookieManager.getInstance().flush()
             pool.destroyAll()
         }
     }
@@ -263,6 +326,7 @@ private fun bindBrowserClients(
     tab: BrowserTab,
     actions: BrowserActions,
     pool: BrowserWebViewPool,
+    popupHost: BrowserWebViewHost,
     onFileChooser: (ValueCallback<Array<Uri>>, WebChromeClient.FileChooserParams) -> Unit,
     onPermissionPrompt: (PendingSitePermission) -> Unit,
     restoreScroll: () -> Unit,
@@ -298,6 +362,19 @@ private fun bindBrowserClients(
         ) {
             if (request.isForMainFrame) {
                 actions.reportBrowserError(tab.id, error.description.toString())
+            }
+        }
+
+        override fun onReceivedHttpError(
+            view: WebView,
+            request: WebResourceRequest,
+            errorResponse: WebResourceResponse,
+        ) {
+            if (request.isForMainFrame && errorResponse.statusCode >= 400) {
+                actions.reportBrowserError(
+                    tab.id,
+                    "The site returned HTTP ${errorResponse.statusCode}",
+                )
             }
         }
 
@@ -351,29 +428,41 @@ private fun bindBrowserClients(
             resultMsg: Message,
         ): Boolean {
             if (!isUserGesture) return false
+            val transport = resultMsg.obj as? WebView.WebViewTransport ?: return false
             val handled = AtomicBoolean(false)
-            val popup = WebView(view.context)
-            popup.webViewClient = object : WebViewClient() {
-                private fun open(url: String?) {
-                    if (!url.isNullOrBlank() && handled.compareAndSet(false, true)) {
-                        actions.newBrowserTab(url)
-                        popup.destroy()
-                    }
-                }
+            val popup = pool.createTransient(tab)
+            popupHost.attachPopup(popup)
 
+            fun finish(url: String?) {
+                if (url.isNullOrBlank() || url == "about:blank") return
+                if (!handled.compareAndSet(false, true)) return
+                popupHost.releasePopup(popup)
+                val scheme = runCatching { url.toUri().scheme?.lowercase() }.getOrNull()
+                if (scheme == "https" || scheme == "http") {
+                    actions.newBrowserTab(url)
+                } else {
+                    actions.requestExternalNavigation(url)
+                }
+            }
+
+            popup.webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(
                     view: WebView,
                     request: WebResourceRequest,
                 ): Boolean {
-                    open(request.url.toString())
+                    finish(request.url.toString())
                     return true
                 }
 
                 override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
-                    open(url)
+                    finish(url)
                 }
             }
-            val transport = resultMsg.obj as? WebView.WebViewTransport ?: return false
+            popup.webChromeClient = object : WebChromeClient() {
+                override fun onCloseWindow(window: WebView) {
+                    if (handled.compareAndSet(false, true)) popupHost.releasePopup(popup)
+                }
+            }
             transport.webView = popup
             resultMsg.sendToTarget()
             return true
