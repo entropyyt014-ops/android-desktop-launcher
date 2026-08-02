@@ -77,6 +77,13 @@ fun CommandCenterOverlay(
     val focusRequester = remember { FocusRequester() }
     val tools = listOf(
         CommandResult.Tool(
+            id = "browse",
+            title = "Open Browse",
+            subtitle = "Desktop-oriented Stage web browser",
+            icon = StageSymbolType.BROWSER,
+            action = { actions.openSurface(StageSurface.BROWSER) },
+        ),
+        CommandResult.Tool(
             id = "apps",
             title = "Open Applications",
             subtitle = "Browse every installed app",
@@ -191,17 +198,19 @@ fun CommandCenterOverlay(
                         )
                     }
                 }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 10.dp, vertical = 7.dp),
-                    horizontalArrangement = Arrangement.End,
-                ) {
-                    Text(
-                        "↑↓ navigate   ↵ open   esc close",
-                        color = StagePalette.TextTertiary,
-                        fontSize = 9.5.sp,
-                    )
+                if (state.deviceProfile.input.hasPhysicalKeyboard) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 7.dp),
+                        horizontalArrangement = Arrangement.End,
+                    ) {
+                        Text(
+                            "↑↓ navigate   ↵ open   esc close",
+                            color = StagePalette.TextTertiary,
+                            fontSize = 9.5.sp,
+                        )
+                    }
                 }
             }
         }

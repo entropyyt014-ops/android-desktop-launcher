@@ -12,8 +12,8 @@ android {
         applicationId = "com.entropy.stage"
         minSdk = 30
         targetSdk = 37
-        versionCode = 1
-        versionName = "0.2.0-gate1"
+        versionCode = 2
+        versionName = "0.3.1-gate2-device-fix"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

@@ -3,12 +3,20 @@ package com.entropy.stage.shell
 import android.content.ComponentName
 import android.graphics.drawable.Drawable
 import android.os.UserHandle
+import com.entropy.stage.browser.BrowserActions
+import com.entropy.stage.browser.BrowserUiState
 import com.entropy.stage.device.DeviceProfile
 
 enum class StageSurface {
     NONE,
+    BROWSER,
     APP_LIBRARY,
     SETTINGS,
+}
+
+enum class StageWindowMode {
+    FLOATING,
+    MAXIMIZED,
 }
 
 enum class SystemDestination {
@@ -58,6 +66,8 @@ data class StageShellUiState(
     val appsLoading: Boolean = true,
     val pinnedAppIds: Set<String> = emptySet(),
     val activeSurface: StageSurface = StageSurface.NONE,
+    val minimizedSurface: StageSurface = StageSurface.NONE,
+    val windowMode: StageWindowMode = StageWindowMode.FLOATING,
     val commandCenterOpen: Boolean = false,
     val controlCenterOpen: Boolean = false,
     val searchQuery: String = "",
@@ -65,16 +75,23 @@ data class StageShellUiState(
     val reduceMotion: Boolean = false,
     val desktopGrain: Boolean = true,
     val dockMagnification: Boolean = true,
+    val browser: BrowserUiState = BrowserUiState(),
     val message: String? = null,
 ) {
     val pinnedApps: List<InstalledApp>
         get() = pinnedAppIds.mapNotNull { id -> apps.firstOrNull { it.id == id } }
+
+    fun isSurfaceRunning(surface: StageSurface): Boolean =
+        surface != StageSurface.NONE &&
+            (activeSurface == surface || minimizedSurface == surface)
 }
 
-interface StageShellActions {
+interface StageShellActions : BrowserActions {
     fun completeOnboarding()
     fun openSurface(surface: StageSurface)
     fun closeSurface()
+    fun minimizeSurface()
+    fun toggleMaximizeSurface()
     fun setCommandCenterOpen(open: Boolean)
     fun setControlCenterOpen(open: Boolean)
     fun setSearchQuery(query: String)
@@ -88,6 +105,48 @@ interface StageShellActions {
     fun setDockMagnification(enabled: Boolean)
     fun refreshPlatformState()
     fun dismissMessage()
+}
+
+internal fun StageShellUiState.withOpenedSurface(surface: StageSurface): StageShellUiState {
+    if (surface == StageSurface.NONE) return withClosedSurface()
+    val restoreMinimized = minimizedSurface == surface
+    return copy(
+        activeSurface = surface,
+        minimizedSurface = StageSurface.NONE,
+        windowMode = if (restoreMinimized || activeSurface == surface) {
+            windowMode
+        } else {
+            StageWindowMode.FLOATING
+        },
+        commandCenterOpen = false,
+        controlCenterOpen = false,
+    )
+}
+
+internal fun StageShellUiState.withClosedSurface(): StageShellUiState = copy(
+    activeSurface = StageSurface.NONE,
+    minimizedSurface = StageSurface.NONE,
+    windowMode = StageWindowMode.FLOATING,
+)
+
+internal fun StageShellUiState.withMinimizedSurface(): StageShellUiState {
+    if (activeSurface == StageSurface.NONE) return this
+    return copy(
+        activeSurface = StageSurface.NONE,
+        minimizedSurface = activeSurface,
+        commandCenterOpen = false,
+        controlCenterOpen = false,
+    )
+}
+
+internal fun StageShellUiState.withToggledMaximize(): StageShellUiState {
+    if (activeSurface == StageSurface.NONE) return this
+    return copy(
+        windowMode = when (windowMode) {
+            StageWindowMode.FLOATING -> StageWindowMode.MAXIMIZED
+            StageWindowMode.MAXIMIZED -> StageWindowMode.FLOATING
+        },
+    )
 }
 
 fun filterInstalledApps(

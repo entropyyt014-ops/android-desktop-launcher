@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.entropy.stage.design.StageGlyph
 import com.entropy.stage.designsystem.StagePalette
+import com.entropy.stage.browser.BrowserCommandType
+import com.entropy.stage.browser.BrowserPanel
 import com.entropy.stage.onboarding.StageOnboarding
 import com.entropy.stage.shell.StageDesktop
 import com.entropy.stage.shell.StageShellActions
@@ -62,6 +64,15 @@ fun StageApp(
         when {
             state.commandCenterOpen -> actions.setCommandCenterOpen(false)
             state.controlCenterOpen -> actions.setControlCenterOpen(false)
+            state.activeSurface == StageSurface.BROWSER &&
+                state.browser.panel != BrowserPanel.NONE -> actions.setBrowserPanel(BrowserPanel.NONE)
+            state.activeSurface == StageSurface.BROWSER &&
+                state.browser.findBarVisible -> actions.setBrowserFindVisible(false)
+            state.activeSurface == StageSurface.BROWSER &&
+                state.browser.focusMode -> actions.setBrowserFocusMode(false)
+            state.activeSurface == StageSurface.BROWSER &&
+                state.browser.activeTab.canGoBack ->
+                actions.requestBrowserCommand(BrowserCommandType.BACK)
             else -> actions.closeSurface()
         }
     }

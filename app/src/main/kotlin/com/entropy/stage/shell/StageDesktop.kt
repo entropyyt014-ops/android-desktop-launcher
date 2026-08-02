@@ -41,7 +41,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,6 +57,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -76,6 +76,8 @@ import com.entropy.stage.design.StageGlyph
 import com.entropy.stage.design.StageSymbol
 import com.entropy.stage.design.StageSymbolType
 import com.entropy.stage.design.WindowTrafficLights
+import com.entropy.stage.browser.BrowserCommandType
+import com.entropy.stage.browser.StageBrowserPanel
 import com.entropy.stage.designsystem.StageDimensions
 import com.entropy.stage.designsystem.StagePalette
 import com.entropy.stage.designsystem.stageDimensionsFor
@@ -110,21 +112,67 @@ fun StageDesktop(
                         true
                     }
 
+                    command && event.key == Key.L -> {
+                        actions.openSurface(StageSurface.BROWSER)
+                        actions.requestBrowserCommand(BrowserCommandType.FOCUS_ADDRESS)
+                        true
+                    }
+
+                    command && event.key == Key.T && event.isShiftPressed -> {
+                        actions.reopenClosedBrowserTab()
+                        true
+                    }
+
+                    command && event.key == Key.T -> {
+                        actions.newBrowserTab()
+                        true
+                    }
+
                     command && event.key == Key.W -> {
-                        actions.closeSurface()
+                        if (state.activeSurface == StageSurface.BROWSER) {
+                            actions.closeBrowserTab(state.browser.activeTabId)
+                        } else {
+                            actions.closeSurface()
+                        }
                         true
                     }
 
                     command && event.key == Key.F -> {
-                        actions.setCommandCenterOpen(true)
+                        if (state.activeSurface == StageSurface.BROWSER) {
+                            actions.setBrowserFindVisible(true)
+                        } else {
+                            actions.setCommandCenterOpen(true)
+                        }
+                        true
+                    }
+
+                    command && event.key == Key.Tab -> {
+                        if (state.activeSurface == StageSurface.BROWSER) {
+                            actions.cycleBrowserTab(forward = !event.isShiftPressed)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+
+                    event.isAltPressed && event.key == Key.DirectionLeft &&
+                        state.activeSurface == StageSurface.BROWSER -> {
+                        actions.requestBrowserCommand(BrowserCommandType.BACK)
+                        true
+                    }
+
+                    event.isAltPressed && event.key == Key.DirectionRight &&
+                        state.activeSurface == StageSurface.BROWSER -> {
+                        actions.requestBrowserCommand(BrowserCommandType.FORWARD)
                         true
                     }
 
                     event.isAltPressed && event.key == Key.Tab -> {
                         actions.openSurface(
                             when (state.activeSurface) {
+                                StageSurface.BROWSER -> StageSurface.APP_LIBRARY
                                 StageSurface.APP_LIBRARY -> StageSurface.SETTINGS
-                                else -> StageSurface.APP_LIBRARY
+                                else -> StageSurface.BROWSER
                             },
                         )
                         true
@@ -321,8 +369,17 @@ private fun StageMenuBar(
         )
         if (expandedMenus) {
             Spacer(Modifier.width(12.dp))
-            MenuAction("File") { actions.openSurface(StageSurface.APP_LIBRARY) }
-            MenuAction("View") { actions.setCommandCenterOpen(true) }
+            MenuAction("File") {
+                if (state.activeSurface == StageSurface.BROWSER) actions.newBrowserTab()
+                else actions.openSurface(StageSurface.APP_LIBRARY)
+            }
+            MenuAction("View") {
+                if (state.activeSurface == StageSurface.BROWSER) {
+                    actions.setBrowserFocusMode(!state.browser.focusMode)
+                } else {
+                    actions.setCommandCenterOpen(true)
+                }
+            }
             MenuAction("Window") {
                 if (state.activeSurface == StageSurface.NONE) {
                     actions.openSurface(StageSurface.APP_LIBRARY)
@@ -463,12 +520,17 @@ private fun DesktopShortcut(
         Spacer(Modifier.height(4.dp))
         Text(
             text = label,
-            modifier = Modifier
-                .background(Color.Black.copy(alpha = 0.32f), RoundedCornerShape(5.dp))
-                .padding(horizontal = 4.dp, vertical = 1.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
             color = Color.White,
             fontSize = 9.5.sp,
             lineHeight = 11.sp,
+            style = androidx.compose.ui.text.TextStyle(
+                shadow = androidx.compose.ui.graphics.Shadow(
+                    color = Color.Black.copy(alpha = 0.92f),
+                    offset = Offset(0f, 2f),
+                    blurRadius = 5f,
+                ),
+            ),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             maxLines = 2,
         )
@@ -540,10 +602,20 @@ private fun StageDockItems(
     StageDockButton(
         label = "Applications",
         selected = state.activeSurface == StageSurface.APP_LIBRARY,
+        running = state.isSurfaceRunning(StageSurface.APP_LIBRARY),
         magnification = state.dockMagnification && !state.reduceMotion,
         onClick = { actions.openSurface(StageSurface.APP_LIBRARY) },
     ) {
         StageSymbol(StageSymbolType.APPS, Modifier.fillMaxSize())
+    }
+    StageDockButton(
+        label = "Browse",
+        selected = state.activeSurface == StageSurface.BROWSER,
+        running = state.isSurfaceRunning(StageSurface.BROWSER),
+        magnification = state.dockMagnification && !state.reduceMotion,
+        onClick = { actions.openSurface(StageSurface.BROWSER) },
+    ) {
+        StageSymbol(StageSymbolType.BROWSER, Modifier.fillMaxSize())
     }
     StageDockButton(
         label = "Command Center",
@@ -556,6 +628,7 @@ private fun StageDockItems(
     StageDockButton(
         label = "Settings",
         selected = state.activeSurface == StageSurface.SETTINGS,
+        running = state.isSurfaceRunning(StageSurface.SETTINGS),
         magnification = state.dockMagnification && !state.reduceMotion,
         onClick = { actions.openSurface(StageSurface.SETTINGS) },
     ) {
@@ -602,7 +675,7 @@ private fun StageWindowHost(
 ) {
     val visible = state.activeSurface != StageSurface.NONE
     val transitionDuration = if (state.reduceMotion) 0 else 210
-    var maximized by remember(state.activeSurface, floating) { mutableStateOf(false) }
+    val maximized = floating && state.windowMode == StageWindowMode.MAXIMIZED
     var dragX by remember(state.activeSurface) { mutableFloatStateOf(0f) }
     var dragY by remember(state.activeSurface) { mutableFloatStateOf(0f) }
     val density = LocalDensity.current
@@ -625,18 +698,27 @@ private fun StageWindowHost(
             modifier = Modifier.fillMaxSize(),
             contentAlignment = if (floating && !maximized) Alignment.TopCenter else Alignment.Center,
         ) {
-            val windowModifier = if (floating && !maximized) {
-                Modifier
+            val windowModifier = when {
+                floating && !maximized -> Modifier
                     .width(availableWidth * 0.78f)
                     .height(availableHeight - dimensions.topStripHeight - 16.dp)
                     .offset(y = dimensions.topStripHeight + 8.dp)
                     .offset { IntOffset(dragX.roundToInt(), dragY.roundToInt()) }
-            } else {
-                Modifier
+
+                floating -> Modifier
                     .fillMaxSize()
                     .padding(
-                        start = if (floating) 8.dp else 7.dp,
-                        end = if (floating) 8.dp else 7.dp,
+                        start = dimensions.dockHeight + 18.dp,
+                        end = 8.dp,
+                        top = dimensions.topStripHeight + 8.dp,
+                        bottom = 8.dp,
+                    )
+
+                else -> Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 7.dp,
+                        end = 7.dp,
                         top = dimensions.topStripHeight + 8.dp,
                         bottom = dimensions.dockHeight + 18.dp,
                     )
@@ -662,7 +744,7 @@ private fun StageWindowHost(
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(42.dp)
+                            .height(44.dp)
                             .background(Color.White.copy(alpha = 0.025f))
                             .then(
                                 if (floating && !maximized) {
@@ -680,8 +762,10 @@ private fun StageWindowHost(
                     ) {
                         WindowTrafficLights(
                             onClose = actions::closeSurface,
-                            onMinimize = actions::closeSurface,
-                            onMaximize = { if (floating) maximized = !maximized },
+                            onMinimize = actions::minimizeSurface,
+                            onMaximize = actions::toggleMaximizeSurface,
+                            maximized = maximized,
+                            canMaximize = floating,
                             modifier = Modifier
                                 .align(Alignment.CenterStart)
                                 .padding(start = 14.dp),
@@ -701,6 +785,13 @@ private fun StageWindowHost(
                             .background(StagePalette.Hairline),
                     )
                     when (state.activeSurface) {
+                        StageSurface.BROWSER -> StageBrowserPanel(
+                            state = state.browser,
+                            actions = actions,
+                            hasPhysicalKeyboard = state.deviceProfile.input.hasPhysicalKeyboard,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+
                         StageSurface.APP_LIBRARY -> AppLibraryPanel(
                             state = state,
                             actions = actions,
@@ -725,6 +816,7 @@ private fun StageWindowHost(
 
 private fun activeTitle(surface: StageSurface): String = when (surface) {
     StageSurface.NONE -> "Stage"
+    StageSurface.BROWSER -> "Browse"
     StageSurface.APP_LIBRARY -> "Applications"
     StageSurface.SETTINGS -> "Settings"
 }

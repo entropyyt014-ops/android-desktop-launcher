@@ -34,10 +34,12 @@ Install one launcher, complete a short adaptive setup, and receive a coherent de
 - [Architecture](docs/ARCHITECTURE.md)
 - [Galaxy A30 benchmark checklist](docs/benchmarks/GALAXY_A30.md)
 - [Gate 1 device test checklist](docs/GATE_1_TEST_CHECKLIST.md)
+- [Gate 1 physical visual evidence](docs/GATE_1_PHYSICAL_EVIDENCE.md)
+- [Gate 2 browser test checklist](docs/GATE_2_TEST_CHECKLIST.md)
 
 ## Current implementation
 
-Gate 0 has passed CI and opened on the physical Galaxy A30 reference device. Gate 1 is now replacing the diagnostic scaffold with the first functional launcher slice:
+Gate 0 passed CI and opened on the physical Galaxy A30 reference device. Gate 1's launcher shell now renders correctly on that device in portrait and landscape. Gate 2 adds the first complete browser vertical slice:
 
 - Android 11 minimum support and Android 17 target support;
 - a first-run assistant and official Android Home-role request;
@@ -46,6 +48,12 @@ Gate 0 has passed CI and opened on the physical Galaxy A30 reference device. Gat
 - Command Center, Control Center and a functional Settings surface;
 - persisted onboarding, Dock, appearance and last-window state;
 - measured RAM, display, heap and mouse/keyboard data under Settings → Performance;
+- a real Android System WebView browser with tabs, navigation, find and focus mode;
+- Desktop, Adaptive and Mobile site profiles remembered per host;
+- persistent tab sessions, closed-tab recovery, bookmarks and history;
+- Android file upload, DownloadManager integration and a real download shelf;
+- explicit camera, microphone, location and external-app confirmation flows;
+- renderer-loss recovery and a maximum of two live WebViews on the 4 GB profile;
 - a lean performance budget for 4 GB devices;
 - unit, lint, screenshot, startup and macrobenchmark infrastructure;
 - CI-built, debug-signed APK artifacts.

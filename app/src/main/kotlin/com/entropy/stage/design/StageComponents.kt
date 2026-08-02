@@ -49,6 +49,7 @@ import com.entropy.stage.shell.InstalledApp
 
 enum class StageSymbolType {
     APPS,
+    BROWSER,
     SEARCH,
     SETTINGS,
     CONTROL,
@@ -119,6 +120,34 @@ fun StageSymbol(
                         )
                     }
                 }
+            }
+
+            StageSymbolType.BROWSER -> {
+                val radius = size.minDimension * 0.34f
+                drawCircle(
+                    color = tint,
+                    radius = radius,
+                    center = center,
+                    style = Stroke(stroke),
+                )
+                drawOval(
+                    color = tint.copy(alpha = 0.82f),
+                    topLeft = Offset(center.x - radius * 0.46f, center.y - radius),
+                    size = Size(radius * 0.92f, radius * 2f),
+                    style = Stroke(stroke * 0.72f),
+                )
+                drawLine(
+                    color = tint.copy(alpha = 0.82f),
+                    start = Offset(center.x - radius, center.y),
+                    end = Offset(center.x + radius, center.y),
+                    strokeWidth = stroke * 0.72f,
+                    cap = StrokeCap.Round,
+                )
+                drawCircle(
+                    color = StagePalette.VioletBright,
+                    radius = stroke * 0.9f,
+                    center = Offset(center.x + radius * 0.55f, center.y - radius * 0.48f),
+                )
             }
 
             StageSymbolType.SEARCH -> {
@@ -282,6 +311,7 @@ fun StageDockButton(
     magnification: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    running: Boolean = selected,
     content: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -333,7 +363,7 @@ fun StageDockButton(
         ) {
             content()
         }
-        if (selected) {
+        if (running) {
             Box(
                 Modifier
                     .align(Alignment.BottomCenter)
@@ -351,13 +381,18 @@ fun WindowTrafficLights(
     onMinimize: () -> Unit,
     onMaximize: () -> Unit,
     modifier: Modifier = Modifier,
+    maximized: Boolean = false,
+    canMaximize: Boolean = true,
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         TrafficLight(StagePalette.Danger, "Close", onClose)
-        Spacer(Modifier.width(8.dp))
         TrafficLight(StagePalette.Warning, "Minimize", onMinimize)
-        Spacer(Modifier.width(8.dp))
-        TrafficLight(StagePalette.Success, "Maximize", onMaximize)
+        TrafficLight(
+            color = StagePalette.Success,
+            label = if (maximized) "Restore" else "Maximize",
+            onClick = onMaximize,
+            enabled = canMaximize,
+        )
     }
 }
 
@@ -366,15 +401,22 @@ private fun TrafficLight(
     color: Color,
     label: String,
     onClick: () -> Unit,
+    enabled: Boolean = true,
 ) {
     Box(
         modifier = Modifier
-            .size(13.dp)
-            .clip(CircleShape)
-            .background(color)
+            .size(44.dp)
             .semantics { contentDescription = label }
-            .clickable(role = Role.Button, onClick = onClick),
-    )
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(
+            Modifier
+                .size(13.dp)
+                .clip(CircleShape)
+                .background(color.copy(alpha = if (enabled) 1f else 0.36f)),
+        )
+    }
 }
 
 @Composable

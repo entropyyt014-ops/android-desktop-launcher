@@ -42,12 +42,15 @@ import com.entropy.stage.design.StageToggle
 import com.entropy.stage.designsystem.StagePalette
 import com.entropy.stage.shell.StageShellActions
 import com.entropy.stage.shell.StageShellUiState
+import com.entropy.stage.shell.StageSurface
 import com.entropy.stage.shell.SystemDestination
+import com.entropy.stage.browser.BrowserPanel
 import kotlin.math.roundToInt
 
 private enum class SettingsSection(val label: String) {
     APPEARANCE("Appearance"),
     DESKTOP("Desktop & Dock"),
+    BROWSER("Browser"),
     PERFORMANCE("Performance"),
     SYSTEM("System"),
     ABOUT("About"),
@@ -263,6 +266,31 @@ private fun SettingsContent(
                 }
             }
 
+            SettingsSection.BROWSER -> {
+                item {
+                    SettingsGroup(title = "Stage Browse") {
+                        InfoRow("Active profile", state.browser.activeTab.profile.label)
+                        InfoRow("Open tabs", state.browser.tabs.size.toString())
+                        InfoRow("Bookmarks", state.browser.bookmarks.size.toString())
+                        InfoRow("Recent sites", state.browser.history.size.toString())
+                        InfoRow("Live WebView budget", "${state.deviceProfile.budget.maxLiveWebViews} maximum")
+                        ActionRow("Open Browser") { actions.openSurface(StageSurface.BROWSER) }
+                        ActionRow("Open Downloads") {
+                            actions.openSurface(StageSurface.BROWSER)
+                            actions.setBrowserPanel(BrowserPanel.DOWNLOADS)
+                        }
+                    }
+                }
+                item {
+                    SettingsGroup(title = "Security") {
+                        InfoRow("Cleartext HTTP", "Blocked by Android")
+                        InfoRow("Invalid certificates", "Always blocked")
+                        InfoRow("Site permissions", "Ask every time")
+                        InfoRow("External links", "Confirmation required")
+                    }
+                }
+            }
+
             SettingsSection.PERFORMANCE -> {
                 item {
                     SettingsGroup(title = "Renderer") {
@@ -347,7 +375,7 @@ private fun SettingsContent(
                                     fontWeight = FontWeight.SemiBold,
                                 )
                                 Text(
-                                    "0.2.0 • Gate 1",
+                                    "0.3.0 • Gate 2",
                                     color = StagePalette.TextSecondary,
                                     fontSize = 11.sp,
                                 )
@@ -502,6 +530,7 @@ private fun AccentPreview() {
 private fun sectionDescription(section: SettingsSection): String = when (section) {
     SettingsSection.APPEARANCE -> "Tune visual depth and motion without sacrificing readability."
     SettingsSection.DESKTOP -> "Control Stage windows, installed apps, and Dock behavior."
+    SettingsSection.BROWSER -> "Desktop-oriented browsing, durable sessions, and privacy boundaries."
     SettingsSection.PERFORMANCE -> "Real device measurements and the renderer budget selected for this phone."
     SettingsSection.SYSTEM -> "Open Android-controlled settings safely."
     SettingsSection.ABOUT -> "Version, architecture, storage, and platform boundaries."
