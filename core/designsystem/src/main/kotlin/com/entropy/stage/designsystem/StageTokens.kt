@@ -8,7 +8,7 @@ object StagePalette {
     val Ink = Color(0xFF08090D)
     val Graphite = Color(0xFF111219)
     val Elevated = Color(0xFF1A1B24)
-    val Window = Color(0xF21A1B22)
+    val Window = Color(0xFA1A1B22)
     val Glass = Color(0xC921222A)
     val Hairline = Color(0x26FFFFFF)
     val TextPrimary = Color(0xFFF4F2F8)

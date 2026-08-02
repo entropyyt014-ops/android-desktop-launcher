@@ -3,6 +3,12 @@ package com.entropy.stage
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
 import com.android.tools.screenshot.PreviewTest
+import com.entropy.stage.browser.BrowserCommandType
+import com.entropy.stage.browser.BrowserDownloadRequest
+import com.entropy.stage.browser.BrowserPageSnapshot
+import com.entropy.stage.browser.BrowserPanel
+import com.entropy.stage.browser.BrowserProfile
+import com.entropy.stage.browser.BrowserUiState
 import com.entropy.stage.designsystem.StageTheme
 import com.entropy.stage.device.DeviceProfile
 import com.entropy.stage.onboarding.StageOnboarding
@@ -47,6 +53,28 @@ fun stageApplicationsLandscapeScreenshot() {
                 widthDp = 740,
                 heightDp = 360,
                 surface = StageSurface.APP_LIBRARY,
+            ),
+            actions = PreviewActions,
+            onRequestHomeRole = {},
+        )
+    }
+}
+
+@PreviewTest
+@Preview(
+    name = "Landscape Stage Browser",
+    widthDp = 740,
+    heightDp = 360,
+    showBackground = true,
+)
+@Composable
+fun stageBrowserLandscapeScreenshot() {
+    StageTheme {
+        StageDesktop(
+            state = previewState(
+                widthDp = 740,
+                heightDp = 360,
+                surface = StageSurface.BROWSER,
             ),
             actions = PreviewActions,
             onRequestHomeRole = {},
@@ -105,6 +133,7 @@ private fun previewState(
         appsLoading = false,
         pinnedAppIds = linkedSetOf("chrome", "termux"),
         activeSurface = surface,
+        browser = BrowserUiState.preview(),
         systemStatus = SystemStatus(
             clockLabel = "Sat 1 Aug  20:30",
             batteryPercent = 82,
@@ -142,4 +171,34 @@ private object PreviewActions : StageShellActions {
     override fun setDockMagnification(enabled: Boolean) = Unit
     override fun refreshPlatformState() = Unit
     override fun dismissMessage() = Unit
+    override fun newBrowserTab(url: String?) = Unit
+    override fun closeBrowserTab(tabId: String) = Unit
+    override fun selectBrowserTab(tabId: String) = Unit
+    override fun cycleBrowserTab(forward: Boolean) = Unit
+    override fun duplicateBrowserTab(tabId: String) = Unit
+    override fun reopenClosedBrowserTab() = Unit
+    override fun navigateBrowser(url: String) = Unit
+    override fun updateBrowserAddress(value: String) = Unit
+    override fun submitBrowserAddress() = Unit
+    override fun requestBrowserCommand(type: BrowserCommandType, payload: String?) = Unit
+    override fun consumeBrowserCommand(serial: Long) = Unit
+    override fun setBrowserProfile(profile: BrowserProfile) = Unit
+    override fun setBrowserPanel(panel: BrowserPanel) = Unit
+    override fun setBrowserFocusMode(enabled: Boolean) = Unit
+    override fun setBrowserFindVisible(visible: Boolean) = Unit
+    override fun setBrowserFindQuery(query: String) = Unit
+    override fun toggleActiveBrowserBookmark() = Unit
+    override fun removeBrowserBookmark(url: String) = Unit
+    override fun reportBrowserPage(tabId: String, snapshot: BrowserPageSnapshot) = Unit
+    override fun reportBrowserError(tabId: String, message: String) = Unit
+    override fun reportBrowserRendererGone(tabId: String, didCrash: Boolean) = Unit
+    override fun requestExternalNavigation(url: String) = Unit
+    override fun dismissExternalNavigation() = Unit
+    override fun confirmExternalNavigation() = Unit
+    override fun enqueueBrowserDownload(request: BrowserDownloadRequest) = Unit
+    override fun refreshBrowserDownloads() = Unit
+    override fun cancelBrowserDownload(id: Long) = Unit
+    override fun openBrowserDownload(id: Long) = Unit
+    override fun shareBrowserDownload(id: Long) = Unit
+    override fun shareActiveBrowserPage() = Unit
 }

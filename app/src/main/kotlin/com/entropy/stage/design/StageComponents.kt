@@ -49,6 +49,7 @@ import com.entropy.stage.shell.InstalledApp
 
 enum class StageSymbolType {
     APPS,
+    BROWSER,
     SEARCH,
     SETTINGS,
     CONTROL,
@@ -119,6 +120,34 @@ fun StageSymbol(
                         )
                     }
                 }
+            }
+
+            StageSymbolType.BROWSER -> {
+                val radius = size.minDimension * 0.34f
+                drawCircle(
+                    color = tint,
+                    radius = radius,
+                    center = center,
+                    style = Stroke(stroke),
+                )
+                drawOval(
+                    color = tint.copy(alpha = 0.82f),
+                    topLeft = Offset(center.x - radius * 0.46f, center.y - radius),
+                    size = Size(radius * 0.92f, radius * 2f),
+                    style = Stroke(stroke * 0.72f),
+                )
+                drawLine(
+                    color = tint.copy(alpha = 0.82f),
+                    start = Offset(center.x - radius, center.y),
+                    end = Offset(center.x + radius, center.y),
+                    strokeWidth = stroke * 0.72f,
+                    cap = StrokeCap.Round,
+                )
+                drawCircle(
+                    color = StagePalette.VioletBright,
+                    radius = stroke * 0.9f,
+                    center = Offset(center.x + radius * 0.55f, center.y - radius * 0.48f),
+                )
             }
 
             StageSymbolType.SEARCH -> {

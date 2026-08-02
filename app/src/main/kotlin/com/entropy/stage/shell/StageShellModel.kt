@@ -3,10 +3,13 @@ package com.entropy.stage.shell
 import android.content.ComponentName
 import android.graphics.drawable.Drawable
 import android.os.UserHandle
+import com.entropy.stage.browser.BrowserActions
+import com.entropy.stage.browser.BrowserUiState
 import com.entropy.stage.device.DeviceProfile
 
 enum class StageSurface {
     NONE,
+    BROWSER,
     APP_LIBRARY,
     SETTINGS,
 }
@@ -65,13 +68,14 @@ data class StageShellUiState(
     val reduceMotion: Boolean = false,
     val desktopGrain: Boolean = true,
     val dockMagnification: Boolean = true,
+    val browser: BrowserUiState = BrowserUiState(),
     val message: String? = null,
 ) {
     val pinnedApps: List<InstalledApp>
         get() = pinnedAppIds.mapNotNull { id -> apps.firstOrNull { it.id == id } }
 }
 
-interface StageShellActions {
+interface StageShellActions : BrowserActions {
     fun completeOnboarding()
     fun openSurface(surface: StageSurface)
     fun closeSurface()

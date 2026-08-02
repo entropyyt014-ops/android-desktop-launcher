@@ -58,6 +58,7 @@ import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.key.isAltPressed
 import androidx.compose.ui.input.key.isCtrlPressed
 import androidx.compose.ui.input.key.isMetaPressed
+import androidx.compose.ui.input.key.isShiftPressed
 import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
@@ -76,6 +77,8 @@ import com.entropy.stage.design.StageGlyph
 import com.entropy.stage.design.StageSymbol
 import com.entropy.stage.design.StageSymbolType
 import com.entropy.stage.design.WindowTrafficLights
+import com.entropy.stage.browser.BrowserCommandType
+import com.entropy.stage.browser.StageBrowserPanel
 import com.entropy.stage.designsystem.StageDimensions
 import com.entropy.stage.designsystem.StagePalette
 import com.entropy.stage.designsystem.stageDimensionsFor
@@ -110,21 +113,67 @@ fun StageDesktop(
                         true
                     }
 
+                    command && event.key == Key.L -> {
+                        actions.openSurface(StageSurface.BROWSER)
+                        actions.requestBrowserCommand(BrowserCommandType.FOCUS_ADDRESS)
+                        true
+                    }
+
+                    command && event.key == Key.T && event.isShiftPressed -> {
+                        actions.reopenClosedBrowserTab()
+                        true
+                    }
+
+                    command && event.key == Key.T -> {
+                        actions.newBrowserTab()
+                        true
+                    }
+
                     command && event.key == Key.W -> {
-                        actions.closeSurface()
+                        if (state.activeSurface == StageSurface.BROWSER) {
+                            actions.closeBrowserTab(state.browser.activeTabId)
+                        } else {
+                            actions.closeSurface()
+                        }
                         true
                     }
 
                     command && event.key == Key.F -> {
-                        actions.setCommandCenterOpen(true)
+                        if (state.activeSurface == StageSurface.BROWSER) {
+                            actions.setBrowserFindVisible(true)
+                        } else {
+                            actions.setCommandCenterOpen(true)
+                        }
+                        true
+                    }
+
+                    command && event.key == Key.Tab -> {
+                        if (state.activeSurface == StageSurface.BROWSER) {
+                            actions.cycleBrowserTab(forward = !event.isShiftPressed)
+                            true
+                        } else {
+                            false
+                        }
+                    }
+
+                    event.isAltPressed && event.key == Key.DirectionLeft &&
+                        state.activeSurface == StageSurface.BROWSER -> {
+                        actions.requestBrowserCommand(BrowserCommandType.BACK)
+                        true
+                    }
+
+                    event.isAltPressed && event.key == Key.DirectionRight &&
+                        state.activeSurface == StageSurface.BROWSER -> {
+                        actions.requestBrowserCommand(BrowserCommandType.FORWARD)
                         true
                     }
 
                     event.isAltPressed && event.key == Key.Tab -> {
                         actions.openSurface(
                             when (state.activeSurface) {
+                                StageSurface.BROWSER -> StageSurface.APP_LIBRARY
                                 StageSurface.APP_LIBRARY -> StageSurface.SETTINGS
-                                else -> StageSurface.APP_LIBRARY
+                                else -> StageSurface.BROWSER
                             },
                         )
                         true
@@ -321,8 +370,17 @@ private fun StageMenuBar(
         )
         if (expandedMenus) {
             Spacer(Modifier.width(12.dp))
-            MenuAction("File") { actions.openSurface(StageSurface.APP_LIBRARY) }
-            MenuAction("View") { actions.setCommandCenterOpen(true) }
+            MenuAction("File") {
+                if (state.activeSurface == StageSurface.BROWSER) actions.newBrowserTab()
+                else actions.openSurface(StageSurface.APP_LIBRARY)
+            }
+            MenuAction("View") {
+                if (state.activeSurface == StageSurface.BROWSER) {
+                    actions.setBrowserFocusMode(!state.browser.focusMode)
+                } else {
+                    actions.setCommandCenterOpen(true)
+                }
+            }
             MenuAction("Window") {
                 if (state.activeSurface == StageSurface.NONE) {
                     actions.openSurface(StageSurface.APP_LIBRARY)
@@ -463,12 +521,17 @@ private fun DesktopShortcut(
         Spacer(Modifier.height(4.dp))
         Text(
             text = label,
-            modifier = Modifier
-                .background(Color.Black.copy(alpha = 0.32f), RoundedCornerShape(5.dp))
-                .padding(horizontal = 4.dp, vertical = 1.dp),
+            modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp),
             color = Color.White,
             fontSize = 9.5.sp,
             lineHeight = 11.sp,
+            style = androidx.compose.ui.text.TextStyle(
+                shadow = androidx.compose.ui.graphics.Shadow(
+                    color = Color.Black.copy(alpha = 0.92f),
+                    offset = Offset(0f, 2f),
+                    blurRadius = 5f,
+                ),
+            ),
             textAlign = androidx.compose.ui.text.style.TextAlign.Center,
             maxLines = 2,
         )
@@ -544,6 +607,14 @@ private fun StageDockItems(
         onClick = { actions.openSurface(StageSurface.APP_LIBRARY) },
     ) {
         StageSymbol(StageSymbolType.APPS, Modifier.fillMaxSize())
+    }
+    StageDockButton(
+        label = "Browse",
+        selected = state.activeSurface == StageSurface.BROWSER,
+        magnification = state.dockMagnification && !state.reduceMotion,
+        onClick = { actions.openSurface(StageSurface.BROWSER) },
+    ) {
+        StageSymbol(StageSymbolType.BROWSER, Modifier.fillMaxSize())
     }
     StageDockButton(
         label = "Command Center",
@@ -701,6 +772,13 @@ private fun StageWindowHost(
                             .background(StagePalette.Hairline),
                     )
                     when (state.activeSurface) {
+                        StageSurface.BROWSER -> StageBrowserPanel(
+                            state = state.browser,
+                            actions = actions,
+                            hasPhysicalKeyboard = state.deviceProfile.hasPhysicalKeyboard,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+
                         StageSurface.APP_LIBRARY -> AppLibraryPanel(
                             state = state,
                             actions = actions,
@@ -725,6 +803,7 @@ private fun StageWindowHost(
 
 private fun activeTitle(surface: StageSurface): String = when (surface) {
     StageSurface.NONE -> "Stage"
+    StageSurface.BROWSER -> "Browse"
     StageSurface.APP_LIBRARY -> "Applications"
     StageSurface.SETTINGS -> "Settings"
 }

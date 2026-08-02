@@ -24,7 +24,7 @@ Status: CI passed and the debug APK opened on the physical Galaxy A30. The first
 
 Exit: the launcher can safely become Home, launch apps, survive process death and remain smooth on the reference profile.
 
-Current slice: setup assistant, Home-role request, real desktop/menu bar/Dock, installed-app library, Command Center, Control Center, Settings, persistent Dock pins and portrait/landscape Stage windows. Two-tile management and full process-death device evidence remain Gate 1 work.
+Current slice: setup assistant, Home-role request, real desktop/menu bar/Dock, installed-app library, Command Center, Control Center, Settings, persistent Dock pins and portrait/landscape Stage windows. Physical screenshots pass the visual shell checks; Home-role, process-death and extended interaction evidence remain behavioral Gate 1 checks.
 
 ## Gate 2 — Browser vertical slice
 
@@ -35,6 +35,8 @@ Current slice: setup assistant, Home-role request, real desktop/menu bar/Dock, i
 - tab suspension, renderer-loss recovery and session restore.
 
 Exit: a desktop-oriented web workflow can be completed without falling back to Chrome for ordinary use.
+
+Current slice: real System WebView surface; compact tabs and navigation chrome; Desktop, Adaptive and Mobile profiles with per-site persistence; bookmarks, history and tab restoration; file upload; Android DownloadManager shelf; permission and external-intent confirmation; focus/find modes; renderer-loss recovery; and a two-live-WebView budget for the 4 GB reference device.
 
 ## Gate 3 — Work tools
 
