@@ -198,7 +198,7 @@ fun CommandCenterOverlay(
                         )
                     }
                 }
-                if (state.deviceProfile.hasPhysicalKeyboard) {
+                if (state.deviceProfile.input.hasPhysicalKeyboard) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()

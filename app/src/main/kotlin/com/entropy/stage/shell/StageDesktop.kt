@@ -775,7 +775,7 @@ private fun StageWindowHost(
                         StageSurface.BROWSER -> StageBrowserPanel(
                             state = state.browser,
                             actions = actions,
-                            hasPhysicalKeyboard = state.deviceProfile.hasPhysicalKeyboard,
+                            hasPhysicalKeyboard = state.deviceProfile.input.hasPhysicalKeyboard,
                             modifier = Modifier.fillMaxSize(),
                         )
 

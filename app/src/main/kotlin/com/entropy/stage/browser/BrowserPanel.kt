@@ -97,6 +97,7 @@ fun StageBrowserPanel(
     }
 
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(Color(0xFF101116))) {
+        val compactPanel = maxWidth < 520.dp
         Column(Modifier.fillMaxSize()) {
             if (!state.focusMode) {
                 BrowserTabStrip(state = state, actions = actions)
@@ -150,7 +151,7 @@ fun StageBrowserPanel(
                         state = state,
                         actions = actions,
                         hasPhysicalKeyboard = hasPhysicalKeyboard,
-                        compact = maxWidth < 520.dp,
+                        compact = compactPanel,
                     )
                 }
 
