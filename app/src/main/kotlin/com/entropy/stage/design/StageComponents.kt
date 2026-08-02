@@ -308,10 +308,10 @@ fun StageAppIcon(
 fun StageDockButton(
     label: String,
     selected: Boolean,
-    running: Boolean = selected,
     magnification: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    running: Boolean = selected,
     content: @Composable () -> Unit,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
@@ -380,9 +380,9 @@ fun WindowTrafficLights(
     onClose: () -> Unit,
     onMinimize: () -> Unit,
     onMaximize: () -> Unit,
+    modifier: Modifier = Modifier,
     maximized: Boolean = false,
     canMaximize: Boolean = true,
-    modifier: Modifier = Modifier,
 ) {
     Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
         TrafficLight(StagePalette.Danger, "Close", onClose)
